@@ -24,4 +24,9 @@ public class Member {
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
 
+    //===== 연관관계 메소드 ======//
+    public void setMember(Member member){
+        this.member = member;
+
+    }
 }
