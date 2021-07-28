@@ -1,5 +1,6 @@
 package jpabook.jpashop.repository;
 
+import jpabook.jpashop.api.OrderSimpleApiController;
 import jpabook.jpashop.domain.Order;
 
 import lombok.RequiredArgsConstructor;
@@ -37,4 +38,17 @@ public class OrderRepository {
                 .getResultList();
 
     }
+
+    // Fetch Join 기법
+    // SQL의 결과를 통해서, 객체에 삽입
+    // 하이버네이트의 정책과 연관없음.
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                "select o from Order o " +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d ", Order.class
+        ).getResultList();
+    }
+
+
 }
