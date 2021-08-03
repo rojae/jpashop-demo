@@ -21,6 +21,9 @@ public class OrderApiController {
 
     private final OrderRepository orderRepository;
 
+    /**
+     * V1. 엔티티 직접 노출
+     */
     @GetMapping("/api/v1/orders")
     public List<Order> ordersV1() {
         List<Order> all = orderRepository.findAll();
@@ -34,14 +37,18 @@ public class OrderApiController {
         return all;
     }
 
+    /**
+     * V2. DTO 사용
+     * N+1 문제 발생
+     */
     @GetMapping("/api/v2/orders")
     public List<OrderDto> ordersV2(){
         List<Order> orders = orderRepository.findAll();
-        List<OrderDto> collect = orders.stream()
+        List<OrderDto> result = orders.stream()
                 .map(OrderDto::new)
                 .collect(Collectors.toList());
 
-        return collect;
+        return result;
     }
 
     @Getter
@@ -51,11 +58,11 @@ public class OrderApiController {
         private LocalDateTime orderDate;
         private OrderStatus orderStatus;
         private Address address;
-        private List<OrderItem> orderItems;
+        private List<OrderItemDto> orderItems;
 
         /**
-         * OrderItems은 entity이기 때문에, proxy 초기화가 필요.
-         * 하지만, DTO안에 entity를 wrapping하지 말자.
+         * DTO안에 entity를 wrapping하지 말자.
+         * value object인 address는 괜찮음.
          */
         public OrderDto(Order order) {
             this.orderId = order.getId();
@@ -63,10 +70,22 @@ public class OrderApiController {
             this.orderDate = order.getOrderDate();
             this.orderStatus = order.getStatus();
             this.address = order.getDelivery().getAddress();
-            order.getOrderItems().stream().forEach(o -> o.getItem().getName());
-            this.orderItems = order.getOrderItems();
+            this.orderItems = order.getOrderItems().stream()
+                    .map(OrderItemDto::new)
+                    .collect(Collectors.toList());
         }
     }
 
+    @Getter
+    static class OrderItemDto{
+        private String itemName;    // 상품명
+        private int orderPrice;     // 주문 가격
+        private int count;          // 주문 수량
 
+        public OrderItemDto(OrderItem orderItem){
+            itemName = orderItem.getItem().getName();
+            orderPrice = orderItem.getItem().getPrice();
+            count = orderItem.getCount();
+        }
+    }
 }
