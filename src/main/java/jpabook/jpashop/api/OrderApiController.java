@@ -44,11 +44,23 @@ public class OrderApiController {
     @GetMapping("/api/v2/orders")
     public List<OrderDto> ordersV2(){
         List<Order> orders = orderRepository.findAll();
-        List<OrderDto> result = orders.stream()
+
+        return orders.stream()
                 .map(OrderDto::new)
                 .collect(Collectors.toList());
+    }
 
-        return result;
+    /**
+     * V3. FetchJoin
+     *
+     */
+    @GetMapping("/api/v3/orders")
+    public List<OrderDto> ordersV3(){
+        List<Order> orders = orderRepository.findAllWithItem();
+
+        return orders.stream()
+                .map(OrderDto::new)
+                .collect(Collectors.toList());
     }
 
     @Getter

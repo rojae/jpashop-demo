@@ -1,6 +1,5 @@
 package jpabook.jpashop.repository;
 
-import jpabook.jpashop.api.OrderSimpleApiController;
 import jpabook.jpashop.domain.Order;
 
 import lombok.RequiredArgsConstructor;
@@ -50,5 +49,19 @@ public class OrderRepository {
         ).getResultList();
     }
 
-
+    // Fetch Join distinct 추가
+    // DB Query에서는 distinct가 의미 없지만
+    // JPA에서는 JOIN으로 인해, select 뻥튀기 되는 값을 버려준다.
+    // distinct를 사용하면, Order의 키값 id의 중복을 제거한다.
+    // 즉 JPA의 distinct는 entity의 id값이 같으면, collection에 중복을 제거한다.
+    // 단점 : 페이징이 불가능. (메모리에서 limit, sort 처리)
+    public List<Order> findAllWithItem() {
+        return em.createQuery(
+                "select distinct o from Order o " +
+                        " join fetch o.member m " +
+                        " join fetch o.delivery d " +
+                        " join fetch o.orderItems oi " +
+                        " join fetch oi.item i ", Order.class)
+        .getResultList();
+    }
 }
