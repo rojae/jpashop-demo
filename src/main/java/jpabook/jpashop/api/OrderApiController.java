@@ -9,6 +9,7 @@ import jpabook.jpashop.repository.OrderSearch;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -51,13 +52,37 @@ public class OrderApiController {
     }
 
     /**
-     * V3. FetchJoin
-     *
+     * V3. Collection Fetch Join
+     * 페이징 불가능.
+     * 데이터전송 네트워크 상으로 전달되는 데이터가 많음
      */
     @GetMapping("/api/v3/orders")
     public List<OrderDto> ordersV3(){
         List<Order> orders = orderRepository.findAllWithItem();
 
+        return orders.stream()
+                .map(OrderDto::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * V3.1. Collection Fetch Join with fetch Size
+     * 페이징 가능.
+     *  (그러나 V3에 비해서, To Many 관계 갯수 만큼 Query를 더 실행)
+     * 최적화된 결과 = 데이터전송 네트워크 전송 유리
+     * default_batch_fetch_size 추가로 인한 inQuery 미리 100개씩 로딩.
+     * 1+N -> 1+1
+     */
+    @GetMapping("/api/v3.1/orders")
+    public List<OrderDto> ordersV3_page(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "100") int limit
+    ){
+        // To One 관계는 우선 FetchJoin으로 가져옴
+        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset, limit);
+
+        // To Many 관계는 LAZY loading
+        // default_batch_fetch_size를 통한 성능개선
         return orders.stream()
                 .map(OrderDto::new)
                 .collect(Collectors.toList());
