@@ -101,6 +101,17 @@ public class OrderApiController {
         return orderQueryRepository.findOrderQueryDtos();
     }
 
+    /**
+     * V5. JPA DTO 직접 조회 (컬렉션 최적화)
+     * 1:1 관계는 단순 조회
+     * 1:n 관계는 각각 별도로 처리한다.
+     * N + 1 -> 1 + 1
+     */
+    @GetMapping("/api/v5/orders")
+    public List<OrderQueryDto> ordersV5(){
+        return orderQueryRepository.findAllByDto_optimization();
+    }
+
     @Getter
     static class OrderDto{
         private Long orderId;
