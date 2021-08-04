@@ -122,7 +122,7 @@ public class OrderApiController {
      * Flat하게 sql을 통해서, 데이터 추출 (쿼리는 1번이지만, 느릴 수 있음)
      * Query 1번
      * 애플리케이션 메모리를 사용하여, api spec에 조립하여 반환 필요. (애플리케이션에서 추가작업)
-     * Flat된 중복 데이터는 페이징이 불가능.
+     * Flat된 중복 데이터는 페이징이 불가능. (여기서는 Order 테이블)
      */
     @GetMapping("/api/v6/orders")
     public List<OrderQueryDto> ordersV6(){
