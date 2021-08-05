@@ -1,18 +1,28 @@
 package jpabook.jpashop.repository;
 
-import jpabook.jpashop.domain.Order;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 
-import lombok.RequiredArgsConstructor;
+import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.domain.OrderStatus;
+import jpabook.jpashop.domain.QMember;
+import jpabook.jpashop.domain.QOrder;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 @Repository
-@RequiredArgsConstructor
 public class OrderRepository {
 
     private final EntityManager em;
+    private final JPAQueryFactory query;
+
+    public OrderRepository(EntityManager em){
+        this.em = em;
+        this.query = new JPAQueryFactory(em);
+    }
 
     public void save(Order order){
         em.persist(order);
@@ -27,15 +37,29 @@ public class OrderRepository {
     }
 
     public List<Order> findAll(OrderSearch orderSearch){
+        QOrder order = QOrder.order;
+        QMember member = QMember.member;
 
-        return em.createQuery("select o from Order o join o.member m " +
-                " where o.status = :status " +
-                " and m.name like :name ", Order.class)
-                .setParameter("status", orderSearch.getOrderStatus())
-                .setParameter("name", orderSearch.getMemberName())
-                .setMaxResults(1000)    // 최대 1000건
-                .getResultList();
+        return query.select(order)
+                .from(order)
+                .join(order.member, member)
+                .where(eqStatus(orderSearch.getOrderStatus()), likeName(orderSearch.getMemberName()))
+                .limit(1000)
+                .fetch();
+    }
 
+    private BooleanExpression eqStatus(OrderStatus orderStatus){
+        if(orderStatus == null){
+            return null;
+        }
+        return QOrder.order.status.eq(orderStatus);
+    }
+
+    private BooleanExpression likeName(String memberName){
+        if(!StringUtils.hasText(memberName)){
+            return null;
+        }
+        return QMember.member.name.like(memberName);
     }
 
     // Fetch Join 기법
@@ -62,7 +86,7 @@ public class OrderRepository {
                         " join fetch o.delivery d " +
                         " join fetch o.orderItems oi " +
                         " join fetch oi.item i ", Order.class)
-        .getResultList();
+                .getResultList();
     }
 
     // Fetch Join
